@@ -7,6 +7,9 @@ import string
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
 
 # Load the saved model and vectorizer
 loaded_model = pickle.load(open('svm_model.sav', 'rb'))
