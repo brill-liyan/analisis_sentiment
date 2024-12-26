@@ -5,3 +5,4 @@ scikit-learn
 pip==24.3.1 
 emoji
 nltk
+Sastrawi
