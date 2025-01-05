@@ -7,18 +7,12 @@ import string
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-import nltk
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('punkt_tab')
 
 # Load the saved model and vectorizer
-loaded_model = pickle.load(open('svm_model.sav', 'rb'))
-loaded_vectorizer = pickle.load(open('vectorizer.sav', 'rb'))
-
-# Load positive and negative lexicons
-positive_lexicon = set(pd.read_csv("positive.tsv", sep="\t", header=None)[0])
-negative_lexicon = set(pd.read_csv("negative.tsv", sep="\t", header=None)[0])
+filename = 'svm_model.sav'
+filename_vectorizer = 'tfidf_vectorizer.sav'
+loaded_model = pickle.load(open(filename, 'rb'))
+vectorizer = pickle.load(open(filename_vectorizer, 'rb'))
 
 def remove_mention(text):
     text = re.sub(r'@\w+', '', text)
@@ -190,30 +184,24 @@ def text_preprocessing_process(text):
     return ' '.join(text)
 
 def determine_sentiment(text):
-    positive_count = sum(1 for word in text.split() if word in positive_lexicon)
-    negative_count = sum(1 for word in text.split() if word in negative_lexicon)
-    if positive_count > negative_count:
-        return "Positive"
-    elif positive_count < negative_count:
-        return "Negative"
-    else:
-        return 'Netral'
+    """Perform sentiment analysis on the given text using the loaded model."""
+    # Preprocess the input text
+    processed_text = text_preprocessing_process(text)
+    # Vectorize the processed text
+    text_vectorized = vectorizer.transform([processed_text])
+
+    # Predict using the loaded model
+    prediction = loaded_model.predict(text_vectorized)[0]
+    return prediction
 
 
 # Streamlit app
-st.title("Sentiment Analysis of Tweets")
+st.title("Sentiment Analysis App")
 
-tweet_input = st.text_input("Masukkan Tweet : ", "")
+# Input text area
+tweet_input = st.text_area("Enter your tweet:", "Type your tweet here...")
 
-if st.button("Analisis"):
-    if tweet_input:
-        processed_tweet = text_preprocessing_process(tweet_input)
-        tfidf_input = loaded_vectorizer.transform([processed_tweet])
-        prediction = loaded_model.predict(tfidf_input)[0]
-        st.write(f"Predicted Sentiment : {prediction}")
-
-        # lexicon-based sentiment analysis
-        lexicon_based_sentiment = determine_sentiment(processed_tweet)
-        st.write(f"Lexicon-based Sentiment : {lexicon_based_sentiment}")
-    else:
-        st.warning("Please enter a tweet.")
+# Perform sentiment analysis when a button is pressed
+if st.button("Analyze"):
+  sentiment = determine_sentiment(tweet_input)
+  st.write(f"Sentiment: {sentiment}")
